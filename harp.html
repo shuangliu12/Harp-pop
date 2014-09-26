@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="paper.js"></script>
+<script type="text/paperscript" canvas="myCanvas">
+
+
+//draw the harp
+
+var handleIn = new Point(-100, -100);
+var handleOut = new Point(100, 100);
+
+
+var startPoint = new Point(300, 150)
+
+var side = 400
+
+var firstSegment = new Segment(startPoint, null, handleOut);
+var secondPoint = new Point(startPoint.x + side, startPoint.y + side/20);
+var secondSegment = new Segment(secondPoint, handleIn, null);
+
+var path = new Path();
+path.segments = [
+  [firstSegment],
+  [secondSegment],
+  [startPoint.x + side/10, startPoint.y + side],
+  [startPoint.x + side/4, startPoint.y + side],
+  [startPoint.x + side/4, startPoint.y + side + side/10],
+  [startPoint.x, startPoint.y + side + side/10],
+  [startPoint],
+];
+
+path.fillColor = 'black';
+
+
+var innerPath = new Path();
+innerPath.segments = [
+  [startPoint.x + side*7/8, startPoint.y + side/10],
+  [startPoint.x + side*3/40, startPoint.y + side],
+  [startPoint.x + side/10, startPoint.y + side - 340],
+];
+
+innerPath.fillColor = 'white';
+
+
+//draw the strings
+
+var slope = (innerPath.segments[0].point.y - innerPath.segments[1].point.y)/ (innerPath.segments[0].point.x - innerPath.segments[1].point.x);
+
+numStrings = 3;
+var stringX = innerPath.segments[1].point.x;
+var strings = [];
+
+for (var i = 0; i < numStrings; i++){
+
+  stringX += (innerPath.segments[0].point.x - innerPath.segments[1].point.x)/(numStrings+1);
+  var stringY = slope*(stringX - innerPath.segments[1].point.x) + innerPath.segments[1].point.y;
+  var line1 = new Path({
+      strokeColor: 'black'
+      ,strokeWidth: 3
+      ,segments: [[stringX,innerPath.segments[0].point.y],[stringX, stringY]]
+  });
+  strings.push(line1)
+}
+
+
+function onMouseMove(event) {
+  for (var i = 0; i < strings.length; i++){
+     var range = Math.abs(event.point.x - strings[i].segments[0].point.x);
+
+     var lowY = strings[i].segments[0].point.y;
+     var highY = strings[i].lastSegment.point.y;
+
+      if (range < 40 && event.point.y >= lowY && event.point.y <= highY){
+        if (strings[i].segments.length > 2){
+            strings[i].removeSegment(1);
+         }
+
+        strings[i].insert(1, new Point(event.point.x, event.point.y));
+        strings[i].smooth();
+     }
+  }
+}
+
+
+
+function onFrame(event){
+  for (var i = 0; i < strings.length; i++){
+
+    if (strings[i].segments.length > 2){
+        var destination = new Point(strings[i].segments[0].point.x, (strings[i].segments[0].point.y+strings[i].segments[2].point.y)/2);
+        var vector = destination - strings[i].segments[1].point;
+        strings[i].segments[1].point += vector/12;
+
+        if(Math.abs(strings[i].segments[0].point.x - strings[i].segments[1].point.x) < 10){
+          strings[i].removeSegment(1);
+          strings[i].flatten(strings[i].segments[1].point.y - strings[i].segments[0].point.y);
+      }
+    }
+  }
+}
+
+
+
+</script>
+</head>
+<body>
+  <canvas id="myCanvas", resize></canvas>
+</body>
+</html>
