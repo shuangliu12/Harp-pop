@@ -2,11 +2,11 @@
 <html>
 <head>
 <script type="text/javascript" src="paper.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
 <script type="text/paperscript" canvas="myCanvas">
 
-
 //draw the harp
-
+var sound = $("#sound")[0];
 var handleIn = new Point(-100, -100);
 var handleOut = new Point(100, 100);
 
@@ -47,7 +47,7 @@ innerPath.fillColor = 'white';
 
 var slope = (innerPath.segments[0].point.y - innerPath.segments[1].point.y)/ (innerPath.segments[0].point.x - innerPath.segments[1].point.x);
 
-numStrings = 3;
+numStrings = 5;
 var stringX = innerPath.segments[1].point.x;
 var strings = [];
 
@@ -78,6 +78,10 @@ function onMouseMove(event) {
 
         strings[i].insert(1, new Point(event.point.x, event.point.y));
         strings[i].smooth();
+
+        if(sound.paused == true){
+          sound.play();
+        }
      }
   }
 }
@@ -85,9 +89,11 @@ function onMouseMove(event) {
 
 
 function onFrame(event){
+  var stringsMoving = false;
   for (var i = 0; i < strings.length; i++){
 
     if (strings[i].segments.length > 2){
+        stringsMoving = true;
         var destination = new Point(strings[i].segments[0].point.x, (strings[i].segments[0].point.y+strings[i].segments[2].point.y)/2);
         var vector = destination - strings[i].segments[1].point;
         strings[i].segments[1].point += vector/12;
@@ -98,13 +104,32 @@ function onFrame(event){
       }
     }
   }
+  if (stringsMoving == false){
+    if(sound.paused == false){
+      sound.pause();
+    }
+  }
 }
-
 
 
 </script>
 </head>
 <body>
+  <audio id = "sound" controls="controls" preload="auto">
+  <source src="music.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
   <canvas id="myCanvas", resize></canvas>
+     <script>
+// var sound = $("#sound")[0];
+//     $("#myCanvas")
+//       .mouseenter(function() {
+//         sound.play();
+//       });
+    $("#sound").hide();
+    $("#sound").loop = true;
+    </script>
+
+
 </body>
 </html>
